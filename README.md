@@ -7,7 +7,7 @@ We provide the source code for MCMeshGAN, along with baseline models for compari
 
 The structure of the proposed MCMeshGAN
 <div align=center>
-<img src="MCMeshGAN.png" title="Overview of MCMeshGAN" width="800" height="300"/></div>
+<img src="MCMeshGAN-main.png" title="Overview of MCMeshGAN" width="800" height="300"/></div>
 
 
 ### Prerequisites
