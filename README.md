@@ -4,9 +4,10 @@ This is the official implementation of MCMeshGAN for predicting aneurysm growth 
 
 We provide the source code for MCMeshGAN, along with baseline models for comparison. Additionally, we include tools for converting longitudinal CT data of thoracic aortic aneurysms into 3D mesh representations.
 
-A demonstration of the predicted mesh sequence over the next 60 months, based on the input ground truth (GT) baseline mesh (shown in the left figure).
+
+The structure of the proposed MCMeshGAN
 <div align=center>
-<img src="GT Baseline.png" width="300" height="400"/>   <img src="PreidictedGif.gif" title="Predited Meshes(1-60 Month)" width="300" height="400"/></div>
+<img src="GT Baseline.png" width="300" height="400"/>   <img src="MCMeshGAN.png" title="Overview of MCMeshGAN" width="300" height="400"/></div>
 
 
 ### Prerequisites
