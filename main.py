@@ -1,44 +1,16 @@
 import os
-os.environ['CUDA_VISIBLE_DEVICES'] = '1'
+os.environ['CUDA_VISIBLE_DEVICES'] = '2'
 import model
 import logging
 import glob
 import argparse
 import sys
 from utils import *
-import gc
 import torch
 
 # Train command
 # --mode train --epochs 50000
-# --mode test --load /mnt/storage/home/lchen6/lchen6/Remote/MCMeshGAN/trained_models/2024_11_13/14_45/epoch5/
-
-gc.collect()
-print(torch.__version__)
-assert sys.version_info >= (3, 6),\
-    "This script requires Python >= 3.6"  # TODO 3.7?
-# assert tuple(int(ver_num) for ver_num in torch.__version__.split('.')) >= (0, 4, 0),\
-#     "This script requires PyTorch >= 0.4.0"  # TODO 0.4.1?
-
-def str_to_gender(s):
-    s = str(s).lower()
-    if s in ('m', 'man', '0'):
-        return 0
-    elif s in ('f', 'female', '1'):
-        return 1
-    else:
-        raise KeyError("No gender found")
-
-
-def str_to_bool(s):
-    s = s.lower()
-    if s in ('true', 't', 'yes', 'y', '1'):
-        return True
-    elif s in ('false', 'f', 'no', 'n', 'o'):
-        return False
-    else:
-        raise KeyError("Invalid boolean")
-
+# --mode test
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='AgeProgression on PyTorch.', formatter_class=argparse.RawTextHelpFormatter)
@@ -70,44 +42,36 @@ if __name__ == '__main__':
     parser.add_argument('--b1', '-b', dest='b1', default=0.5, type=float)
     parser.add_argument('--b2', '-B', dest='b2', default=0.999, type=float)
     parser.add_argument('--shouldplot', '--sp', dest='sp', default=False, type=bool)
-
-    # test params
-    parser.add_argument('--age', '-a', required=False, type=int)
-    parser.add_argument('--gender', '-g', required=False, type=str_to_gender)
     parser.add_argument('--watermark', '-w', action='store_true')
-    parser.add_argument('--interval', '-it', default=6, required=False, type=int)
 
     # shared params
     parser.add_argument('--cpu', '-c', action='store_true', help='Run on CPU even if CUDA is available.')
     parser.add_argument('--load', '-l', required=False, default=None, help='Trained models path for pre-training or for testing')
-    parser.add_argument('--input', '-i', default=None, help='Training dataset path (default is {}) or testing image path'.format(default_train_results_dir()))
+    parser.add_argument('--input', '-i', default='/mnt/storage/home/lchen6/lchen6/data/TAAMesh/train/MeshALL_10000/', help='Training dataset path (default is {}) or testing image path'.format(default_train_results_dir()))
     parser.add_argument('--output', '-o', default='')
     parser.add_argument('-z', dest='z_channels', default=50, type=int, help='Length of Z vector')
     args = parser.parse_args()
 
-    data_path = '/mnt/storage/home/lchen6/cardiac/001- PTAAP Study/01- Database/PTAAP_Ash/Followup_Alignment_ORISize/rigidalignment/LessVerts_PerPID/VTKDS/OBJ/'
+    data_path = args.input
     data_list = glob.glob(data_path + '*.obj')
     label_path = data_path
     label_list = glob.glob(label_path + '*.obj')
-
     consts.NUM_Z_CHANNELS = args.z_channels
-    net = model.MCMeshGAN()
+    net = model.MeshKCNGCNNet()
+    print(net)
 
     if not args.cpu and torch.cuda.is_available():
         net.cuda()
 
     if args.mode == 'train':
-
         betas = (args.b1, args.b2) if args.load is None else None
         weight_decay = args.weight_decay if args.load is None else None
         lr = args.learning_rate if args.load is None else None
-
         if args.load is not None:
             net.load(args.load)
             print("Loading pre-trained models from {}".format(args.load))
 
-        data_src = args.input or consts.UTKFACE_DEFAULT_PATH
-        print("Data folder is {}".format(data_src))
+        print("Data folder is {}".format(args.input))
         results_dest = args.output or default_train_results_dir()
         os.makedirs(results_dest, exist_ok=True)
         print("Results folder is {}".format(results_dest))
@@ -134,21 +98,22 @@ if __name__ == '__main__':
         )
 
     elif args.mode == 'test':
-        test_data_path='/mnt/storage/home/lchen6/lchen6/Remote/AgeAortaGCN/demo_results/ORI/'
-        if args.load is None:
-            raise RuntimeError("Must provide path of trained models")
-        net.load(path=args.load, slim=True)
-        results_dest = args.output or default_test_results_dir()
-        if not os.path.isdir(results_dest):
-            os.makedirs(results_dest)
-        data_list = glob.glob(test_data_path + '*.obj')
-        label_path = data_path
-        label_list = glob.glob(test_data_path + '*.obj')
-        interval = args.interval
-        net.test_single(
-            data_list=data_list,
-            target=results_dest,
-            time_interval=interval,
-            model_id=args.load,
-            watermark=args.watermark
-        )
+        epoches = ['5']
+        for epoch_id in epoches:
+            args.load = '/mnt/storage/home/lchen6/lchen6/Remote/AgeAortaGCN/trained_models/2026_02_17/19_57/epoch'+epoch_id+'/'
+            test_data_path='/mnt/storage/home/lchen6/lchen6/data/TAAMesh/test/MeshALL_10000/'
+            if args.load is None:
+                raise RuntimeError("Must provide path of trained models")
+            net.load(path=args.load, slim=True)
+            results_dest = args.output or default_test_results_dir()
+            if not os.path.isdir(results_dest):
+                os.makedirs(results_dest)
+            data_list = glob.glob(test_data_path + '*.obj')
+            label_path = data_path
+            label_list = glob.glob(test_data_path + '*.obj')
+            net.test_single(
+                data_list=data_list,
+                target=results_dest,
+                epoch_id=args.load,
+                watermark=args.watermark
+            )
