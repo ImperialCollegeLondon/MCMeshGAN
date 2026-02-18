@@ -53,6 +53,7 @@ python main.py --mode test --load MCMeshGAN/trained_models/2024_11_01/16_57/epoc
 ## Comparison Baselines
 All the Baselines and MCMeshGAN are constructed using the Pytorch Geometric.
 The baselines, including GCNConv, GCN2Conv, SSGConv, and PMLP, are located in ``` MCMeshGAN/model.py``` 
+The baselines LabGATr is located in ``` MCMeshGAN/labgatr_mesh_growth_baseline.py``` 
 
 ## Tools for Mesh Data Generation from CT Data
 ### 1. Segmentaion Mask Generation for CT data 
